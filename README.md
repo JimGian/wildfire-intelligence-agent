@@ -27,6 +27,14 @@ Greece lost more than 81,000 hectares to wildfire in 2023 alone, anchored by the
 
 ---
 
+## Model training
+
+The burn-scar segmentation model was fine-tuned on Sentinel-2 imagery from the 2023 Greek fire season.
+
+![Training history](assets/training_history.png)
+
+---
+
 ## Architecture
 
 The system has four layers: an EfficientNet-B0 classifier and dNBR segmentation model (ML layer), a tool layer wrapping five external data sources and the local checkpoint, a Qwen 2.5 7B agent loop via Ollama that decides which tools to call and in what order, and a Gradio streaming UI that surfaces the tool-call trace and final report side-by-side. Each user query enters the agent loop; the model emits tool calls, receives structured JSON results, and iterates until it produces a markdown report or exhausts the turn budget (MAX_TURNS=10).
