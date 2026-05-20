@@ -1,0 +1,174 @@
+{
+  "generated": "2026-05-20",
+  "model": "qwen2.5:7b",
+  "inference_backend": "Ollama 0.24.0 (local)",
+  "temperature": 0.2,
+  "num_ctx": 8192,
+  "hardware": "RTX 4080 Laptop 12 GB",
+
+  "source_files": {
+    "tool_level": "wildfire_agent/eval.py + eval_multi.py",
+    "dispatch_regression": "eval_runs/eval_dispatch_20260520_102020.json",
+    "orchestration_original": "eval_runs/eval_orchestration_20260520_121635.json",
+    "orchestration_rerun": "eval_runs/eval_orchestration_rerun_20260520_210335.json"
+  },
+
+  "note_on_rerun": "ambiguous_fire_query and weather_anomaly_query were re-run after fixing a TypeError in run_burn_scar_model (model was passing fire_start_date, an unexpected kwarg). The fix adds **_ to all tool signatures and a try/except TypeError in dispatch_tool. open_severity_query and comparative_historical_query numbers are from the original run and were NOT re-run.",
+
+  "tool_level_eval": {
+    "description": "Calls tool functions directly, no agent loop. 6 cases from eval.py.",
+    "runs_per_case": 5,
+    "total_runs": 30,
+    "pass_rate": "30/30 (100%)"
+  },
+
+  "dispatch_regression_eval": {
+    "description": "Prescriptive queries that name the tools to call. Tests tool dispatch, NOT orchestration judgment.",
+    "eval_file": "eval_dispatch.py",
+    "cases": 6,
+    "runs_per_case": 5,
+    "total_runs": 30,
+    "must_pass_rate": "30/30 (100%)",
+    "should_pass_rate": "40/45 (89%)",
+    "quality_pass_rate": "120/120 (100%)",
+    "should_miss": "evros_firms_hotspots: lookup_historical_context 0/5 — model goes directly to FIRMS without looking up the ignition date first, every run.",
+    "per_case": [
+      {"id": "evros_burn_assessment",    "must": "5/5", "should": {"fetch_satellite_imagery": 5, "run_burn_scar_model": 5},              "mean_quality": 4.0, "quality_max": 4, "mean_turns": 2.4, "mean_tools": 2.8, "mean_elapsed_s": 85.8},
+      {"id": "rhodes_burn_assessment",   "must": "5/5", "should": {"fetch_satellite_imagery": 5, "run_burn_scar_model": 5},              "mean_quality": 4.0, "quality_max": 4, "mean_turns": 2.0, "mean_tools": 2.0, "mean_elapsed_s": 48.4},
+      {"id": "evros_imagery_check",      "must": "5/5", "should": {"fetch_satellite_imagery": 5},                                        "mean_quality": 4.0, "quality_max": 4, "mean_turns": 2.0, "mean_tools": 1.0, "mean_elapsed_s": 14.0},
+      {"id": "evros_firms_hotspots",     "must": "5/5", "should": {"query_firms_active_fires": 5, "lookup_historical_context": 0},       "mean_quality": 4.0, "quality_max": 4, "mean_turns": 2.0, "mean_tools": 1.0, "mean_elapsed_s": 23.5},
+      {"id": "evros_weather_aug1",       "must": "5/5", "should": {"query_weather_conditions": 5},                                       "mean_quality": 4.0, "quality_max": 4, "mean_turns": 2.0, "mean_tools": 1.0, "mean_elapsed_s": 18.3},
+      {"id": "historical_northern_greece","must": "5/5", "should": {"lookup_historical_context": 5},                                     "mean_quality": 4.0, "quality_max": 4, "mean_turns": 2.0, "mean_tools": 1.0, "mean_elapsed_s": 45.2}
+    ]
+  },
+
+  "orchestration_eval": {
+    "description": "Open-ended or ambiguous queries. Model must decide which tools to call and synthesise a real assessment. Quality checks verify synthesised claims, not number echoes.",
+    "eval_file": "eval_orchestration.py",
+    "cases": 4,
+    "runs_per_case": 5,
+    "total_runs": 20,
+    "must_pass_rate": "20/20 (100%)",
+    "must_pass_rate_pre_fix": "17/20 (85%)",
+    "should_pass_rate": "52/60 (87%)",
+    "quality_pass_rate": "69/85 (81%)",
+    "per_case": [
+      {
+        "id": "open_severity_query",
+        "query": "How bad was the Evros wildfire in August 2023?",
+        "source_run": "original (20260520_121635)",
+        "must": "5/5",
+        "should": {
+          "lookup_historical_context": 5,
+          "fetch_satellite_imagery": 5,
+          "run_burn_scar_model": 5,
+          "query_firms_active_fires": 5,
+          "query_weather_conditions": 5
+        },
+        "should_total": "25/25",
+        "mean_quality": 4.8,
+        "quality_max": 5,
+        "quality_checks_pass": "24/25",
+        "quality_miss": "severity_judgment — 1 run produced a report without using severe/extreme/catastrophic/largest/devastating/unprecedented/worst",
+        "mean_turns": 6.0,
+        "mean_tools": 5.0,
+        "mean_elapsed_s": 93.3
+      },
+      {
+        "id": "comparative_historical_query",
+        "query": "What was the worst Greek wildfire of 2023 and how does it compare to historical Greek wildfires? Was the weather unusually severe?",
+        "source_run": "original (20260520_121635)",
+        "must": "5/5",
+        "should": {
+          "lookup_historical_context": 5,
+          "query_weather_conditions": 5,
+          "fetch_satellite_imagery": 1,
+          "run_burn_scar_model": 1
+        },
+        "should_total": "12/20",
+        "mean_quality": 2.8,
+        "quality_max": 4,
+        "quality_checks_pass": "14/20",
+        "quality_miss": "comparison_made — 4/5 runs described the fire without using larger/smaller/worse/compared/exceeded/unprecedented/surpassed/more severe/less severe/biggest",
+        "mean_turns": 3.6,
+        "mean_tools": 2.6,
+        "mean_elapsed_s": 118.4
+      },
+      {
+        "id": "ambiguous_fire_query",
+        "query": "Tell me about the 2023 fire in northern Greece.",
+        "source_run": "rerun after fix (20260520_210335)",
+        "must": "5/5",
+        "must_pre_fix": "4/5",
+        "should": {
+          "lookup_historical_context": 5
+        },
+        "should_total": "5/5",
+        "mean_quality": 2.8,
+        "quality_max": 4,
+        "quality_checks_pass": "14/20",
+        "quality_miss": "no_refusal (1/5 runs hedged: 'there isn't a specific detailed report'), quantitative_finding (model omits ha values in several runs), date_or_month (1 run omitted month)",
+        "mean_turns": 2.0,
+        "mean_tools": 1.0,
+        "mean_elapsed_s": 11.2
+      },
+      {
+        "id": "weather_anomaly_query",
+        "query": "Were the weather conditions during the 2023 Evros fire unusually dangerous compared to normal August conditions?",
+        "source_run": "rerun after fix (20260520_210335)",
+        "must": "5/5",
+        "must_pre_fix": "3/5",
+        "should": {
+          "query_weather_conditions": 5,
+          "lookup_historical_context": 5
+        },
+        "should_total": "10/10",
+        "mean_quality": 3.4,
+        "quality_max": 4,
+        "quality_checks_pass": "17/20",
+        "quality_miss": "run 3: model called burn_scar_model (5 tools, 6 turns) and final report summarised burn area rather than weather — all 4 quality checks failed on that run",
+        "mean_turns": 4.8,
+        "mean_tools": 3.8,
+        "mean_elapsed_s": 21.2
+      }
+    ],
+    "notable_failures": [
+      {
+        "id": "comparison_made_predicate_miss",
+        "case": "comparative_historical_query",
+        "runs_affected": "4/5",
+        "description": "Model produced factually comparative reports (e.g., 'one of the largest ever recorded in the EU') but used superlative adjectives rather than explicit comparison verbs (larger, exceeded, surpassed, etc.), failing the comparison_made predicate.",
+        "report_quality_note": null
+      },
+      {
+        "id": "soft_refusal_ambiguous_query",
+        "case": "ambiguous_fire_query",
+        "runs_affected": "1/5",
+        "description": "Run 1 produced 'there isn't a specific detailed report for the 2023 wildfire in northern Greece' followed by generic context. Model hedged instead of committing to the Evros/Dadia fire. The response mentioned Rhodes and Evia rather than the correct Evros answer.",
+        "report_quality_note": null
+      },
+      {
+        "id": "tool_overreach_weather_anomaly",
+        "case": "weather_anomaly_query",
+        "runs_affected": "1/5",
+        "description": "Run 3 called 5 tools (including fetch_satellite_imagery + run_burn_scar_model), took 6 turns, and produced a report focused on burn scar area rather than weather. Model lost track of the query intent after receiving burn scar tool results. Only 1/4 quality checks passed.",
+        "report_quality_note": null
+      },
+      {
+        "id": "hallucinated_weather_data_mati",
+        "case": "comparative_historical_query",
+        "runs_affected": "1/5 (run 3)",
+        "description": "Run 3 presented a weather comparison table for Mati (2018) with specific values (36.5°C, 10.0 km/h, 48%, HDWI 2.5). No tool call was made for the Mati event. These values were fabricated. The Rhodes row (36.5°C, 16.3 km/h, 34%, HDWI 18.8) was accurate — fetched via query_weather_conditions(region='rhodes', date='2023-07-18').",
+        "report_quality_note": "hallucinated_weather_data_for_mati_2018",
+        "flagged_in_trace": "eval_orchestration_20260520_121635.json / comparative_historical_query / run 3"
+      },
+      {
+        "id": "typeerror_unexpected_kwarg",
+        "case": "ambiguous_fire_query + weather_anomaly_query",
+        "runs_affected": "3/20 (pre-fix)",
+        "description": "Qwen passed fire_start_date to run_burn_scar_model, which only declares region in its schema. The model correctly inferred fire_start_date from prior lookup_historical_context results but passed it to the wrong tool. Fixed by adding **_ to all tool function signatures and a try/except TypeError in dispatch_tool.",
+        "status": "fixed"
+      }
+    ]
+  }
+}
