@@ -21,7 +21,7 @@ Greece lost more than 81,000 hectares to wildfire in 2023 alone, anchored by the
 
 ## Demo
 
-*Demo screenshot: [insert ui_demo.png]*
+*Demo screenshot: [assets/evia1.png]*
 
 **No LLM API key required.** All inference runs locally on Ollama.
 
